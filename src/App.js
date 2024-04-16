@@ -1,49 +1,80 @@
-import React, { useState }  from "react";
+import React, { useState, useMemo }  from "react";
 import './style/App.css';
-import PostItem from "./components/PostItem"
 import PostList from "./components/PostList";
-import Mybutton from "./components/UI/button/MyButton";
+import PostForm from "./components/PostForm";
+import MySelect from "./components/UI/select/MySelect";
 import MyInput from "./components/UI/input/MyInput";
-import { useRef } from "react";
 
 function App() {
 
   const [posts, setPosts] = useState([
-    {id: 1, title: 'JavaScdript', body: 'Description'},
-    {id: 2, title: 'JavaScdript 2', body: 'Description'},
-    {id: 3, title: 'JavaScdript 3', body: 'Description'},
-    {id: 4, title: 'JavaScdript 4', body: 'Description'},
+    {id: 1, title: 'JavaScript', body: 'dsad'},
+    {id: 2, title: 'das 2', body: 'Descriptdasdion'},
+    {id: 3, title: 'dasdas 3', body: 'dasdas'},
+    {id: 4, title: 'dasdas 4', body: 'dasd'},
   ])
 
-  const [post, setPost] = useState({title: '', body: ''})
+  const [selectedSort, setSelectedSort] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
 
-  const addNewPost = (e) => {
-    e.preventDefault()
+  const sortedPosts = useMemo(() => {
+    if(selectedSort) {
+      return [...posts].sort((a, b) => a[selectedSort].localeCompare(b[selectedSort]));
+    }
+    return posts;
+  }, [selectedSort, posts])
 
-    setPosts([...posts, {...post, id: Date.now()}])
-    setPost({title: '', body: ''})
+  const sortedAndSearchedPosts = useMemo(() => {
+    return sortedPosts.filter(post => post.title.includes(searchQuery))
+  }, [searchQuery, sortedPosts])
+
+
+  const createPost = (newPost) => {
+    setPosts([...posts, newPost])
+  }
+
+  const removePost = (post) => {
+    setPosts(posts.filter(p => p.id !== post.id))
+  }
+
+  const sortPosts = (sort) => {
+    setSelectedSort(sort);
   }
 
 
   return (
     <div className="App">
-      <form>
+      <PostForm create={createPost}/>
+
+      <hr style={{margin: '15px 0'}}/>
+      <div>
         <MyInput
-          value={post.title} 
-          onChange={e => setPost({...post, title: e.target.value})}
-          type="text" 
-          placeholder="Names posts"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search..."
+
         />
-        <MyInput 
-          value={post.body} 
-          onChange={e => setPost({...post, body: e.target.value})}
-          type="text" 
-          placeholder="Descriptions posts"
+
+        <MySelect
+          value={selectedSort}
+          onChange={sortPosts}
+          defaultValue="Assortment"
+          options={[
+            {value: 'title', name: 'By name'},
+            {value: 'body', name: 'By description'},
+          ]}
         />
-        <Mybutton onClick={addNewPost}>Create Posts</Mybutton>
-      </form>
-      <PostList posts={posts} title="List one for post"/>
+      </div>
+
+      {posts.length !== 0
+        ? <PostList remove={removePost} posts={sortedAndSearchedPosts} title="List one for post"/>
+        : 
+        <h1 style={{textAlign: 'center'}}>
+          Posts is not exists
+        </h1>
+      }
+      
     </div>
   );
 }
